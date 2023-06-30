@@ -3,22 +3,10 @@
   hosts: all
   become: true
   tasks:
-    - name: Add php support for apache Ubuntu
-      apt: 
-        name: libapache2-mod-php
+    - name: Install apache and php
+      package:
+        name: 
+          - "{{ apache_package }}"
+          - "{{ php_package }}"
         state: latest
-      when: ansible_distribution == "Ubuntu"
-    - name: Update repository index
-      dnf:
         update_cache: yes
-      when: ansible_distribution == "CentOS"
-    - name: Install the apache2 package
-      dnf: 
-        name: httpd
-        state: latest
-      when: ansible_distribution == "CentOS"
-    - name: Add php support for apache CentOS
-      dnf: 
-        name: php
-        state: latest
-      when: ansible_distribution == "CentOS"
