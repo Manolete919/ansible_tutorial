@@ -15,7 +15,29 @@
         upgrade: dist
         update_cache: yes
       when: ansible_distribution == "Ubuntu"
-- name: workstation
+- name: Manage Users
+  hosts: all
+  become: true
+  tasks:
+    - name: Create a user name simone
+      tags: always
+      user:
+        name: simone
+        groups: root
+    - name: Add ssh key for simone. Copy the key for simone
+      tags: always
+      authorized_key:
+        user: simone
+        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMJXTqetOc6iBGQIfuW4IKoErFzG8H6FswxY1wPCCOU1 ansible"       
+    - name: Add sudoer file for simone
+      tags: always
+      copy:
+        src: sudoer_simone
+        dest: /etc/sudoers.d/simone
+        owner: root
+        group: root
+        mode: 0440
+- name: Install terraform
   hosts: workstations
   become: true
   tasks:
@@ -49,6 +71,13 @@
           - httpd
           - php
         state: latest
+      when: ansible_distribution == "CentOS"
+    - name: start httpd (CentOS)
+      tags: apache,centos,httpd
+      service:
+        name: httpd
+        state: started
+        enabled: true
       when: ansible_distribution == "CentOS"
     - name: copy files
       tags: apache,apache2,httpd
