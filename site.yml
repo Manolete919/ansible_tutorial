@@ -1,102 +1,36 @@
----
-- name: Getting started ansible
-  hosts: all
+- hosts: all
   become: true
   pre_tasks:
-    - name: install update (CentOS)
+    - name: update repository index (CentOS)
       tags: always
       dnf:
-        update_cache: yes
-      # what is consired a change. Consider this not matter what
+        update_cache: 'yes'
       changed_when: false
       when: ansible_distribution == "CentOS"
-    - name: install update (Ubuntu)
+    - name: update repository index (Ubuntu)
       tags: always
       apt:
-        update_cache: yes
+        update_cache: 'yes'
       changed_when: false
       when: ansible_distribution == "Ubuntu"
-- name: Manage Users
-  hosts: all
+- hosts: all
   become: true
-  tasks:
-    - name: Add ssh key for simone. Copy the key for simone
-      tags: always
-      authorized_key:
-        user: simone
-        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMJXTqetOc6iBGQIfuW4IKoErFzG8H6FswxY1wPCCOU1 ansible"       
-- name: Install terraform
-  hosts: workstations
+  roles:
+    - base
+- hosts: workstations
   become: true
-  tasks:
-    - name: Install Unzip
-      package:
-        name: unzip
-    - name: Install Terraform
-      unarchive:
-        src: https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip
-        dest: /usr/local/bin
-        remote_src: yes
-        mode: 0755
-        owner: root
-        group: root
-- name: Another one
-  hosts: web_servers
+  roles:
+    - workstations
+- hosts: web_servers
   become: true
-  tasks:
-    - name: Install the apache2 package and php package and update cache for Ubuntu
-      tags: apache,apache2,ubuntu
-      apt:
-        name:
-          - apache2
-          - libapache2-mod-php
-        state: latest
-      when: ansible_distribution == "Ubuntu"
-    - name: Install the apache2 package and phh package and update cache for CentOS
-      tags: apache,centos,httpd
-      dnf:
-        name:
-          - httpd
-          - php
-        state: latest
-      when: ansible_distribution == "CentOS"
-    - name: start httpd (CentOS)
-      tags: apache,centos,httpd
-      service:
-        name: httpd
-        state: started
-        enabled: true
-      when: ansible_distribution == "CentOS"
-    - name: copy files
-      tags: apache,apache2,httpd
-      copy:
-        src: default_site.html
-        dest: /var/www/html/index.html
-        owner: root
-        group: root
-        mode: 0644
-- name: onther one with db servers
-  hosts: db_servers
+  roles:
+    - web_servers
+- hosts: db_servers
   become: true
-  tasks:
-   - name: Install Maria package (CentOS)
-     tags: centos,db,mariadb
-     dnf:
-       name: mariadb
-       state: latest
-     when: ansible_distribution == "CentOS"
-   - name: Install Maria package (Ubuntu)
-     tags: db,mariadb,ubuntu
-     apt:
-       name: mariadb-server
-       state: latest
-     when: ansible_distribution == "Ubuntu"
-- name: play for the fileservers
-  hosts: file_servers
+  roles:
+    - db_servers
+- hosts: file_servers
   become: true
-  tasks:
-   - name: Install Samba Package
-     tags: samba
-     package:
-       name: samba
-       state: latest
+  roles:
+    - file_servers
+
